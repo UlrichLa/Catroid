@@ -31,6 +31,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 
@@ -42,6 +43,9 @@ import org.catrobat.catroid.utils.ImageEditing;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -179,14 +183,23 @@ public class LookData implements Cloneable, Nameable, Serializable {
 		this.textureRegion = textureRegion;
 	}
 
+	// TODO: PIXMAP for clones, somewhen needs to be removed...
+	private static Map <String,Pixmap> map =  new HashMap<String,Pixmap>();
+
 	public Pixmap getPixmap() {
 		if (pixmap == null) {
 			try {
+				// TODO: PIXMAP for clones
+				if (map.containsKey(file.getAbsolutePath()))
+					return map.get(file.getAbsolutePath());
 				pixmap = new Pixmap(Gdx.files.absolute(file.getAbsolutePath()));
+				map.put(file.getAbsolutePath(), pixmap);
 			} catch (GdxRuntimeException gdxRuntimeException) {
 				Log.e(TAG, Log.getStackTraceString(gdxRuntimeException));
 				if (gdxRuntimeException.getMessage().startsWith("Couldn't load file:")) {
 					pixmap = new Pixmap(1, 1, Pixmap.Format.Alpha);
+					// TODO: PIXMAP for clones
+					map.put(file.getAbsolutePath(), pixmap);
 				}
 			} catch (NullPointerException nullPointerException) {
 				Log.e(TAG, Log.getStackTraceString(nullPointerException));
@@ -235,12 +248,19 @@ public class LookData implements Cloneable, Nameable, Serializable {
 		return collisionInformation;
 	}
 
+	private static Map<String, BitmapFactory.Options> mapMime =  new HashMap<>();
+
+	// TODO getImageMimeType possible improvements also here but not that much!?
 	public String getImageMimeType() {
 		String pathName = file.getAbsolutePath();
-		BitmapFactory.Options options = new BitmapFactory.Options();
-		options.inJustDecodeBounds = true;
-		BitmapFactory.decodeFile(pathName, options);
-		return options.outMimeType;
+		if (mapMime.containsKey(pathName))
+			return mapMime.get(pathName).outMimeType;
+		else {
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inJustDecodeBounds = true;
+			BitmapFactory.decodeFile(pathName, options);
+			return options.outMimeType;
+		}
 	}
 
 	public boolean isValid() {

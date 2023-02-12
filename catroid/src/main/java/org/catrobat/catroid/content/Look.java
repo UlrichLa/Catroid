@@ -55,6 +55,7 @@ import org.catrobat.catroid.utils.TouchUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Arrays;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.VisibleForTesting;
@@ -104,6 +105,11 @@ public class Look extends Image {
 		setRotation(0f);
 		setTouchable(Touchable.enabled);
 		addListeners();
+		if (sprite != null && sprite.look != null)
+		{
+			pixmap = sprite.look.pixmap;
+			lookData = sprite.look.lookData;
+		}
 	}
 
 	protected void addListeners() {
@@ -157,6 +163,8 @@ public class Look extends Image {
 	}
 
 	public void copyTo(final Look destination) {
+		// TODO can the shader be reused here?!?
+		destination.shader = shader;
 		destination.setLookVisible(this.isLookVisible());
 		destination.setPositionInUserInterfaceDimensionUnit(this.getXInUserInterfaceDimensionUnit(),
 				this.getYInUserInterfaceDimensionUnit());
@@ -169,6 +177,8 @@ public class Look extends Image {
 		destination.setBrightnessInUserInterfaceDimensionUnit(this.getBrightnessInUserInterfaceDimensionUnit());
 		destination.hasParticleEffect = hasParticleEffect;
 		destination.isAdditive = isAdditive;
+		// TODO on change file name clear pixmap
+		destination.pixmap = pixmap;
 	}
 
 	public boolean doTouchDown(float x, float y, int pointer) {
@@ -508,20 +518,23 @@ public class Look extends Image {
 		return point;
 	}
 
+	// TODO: do I always need to create a new poligon just fot the hitbox?
 	public Rectangle getHitbox() {
 		float x = getXInUserInterfaceDimensionUnit() - getWidthInUserInterfaceDimensionUnit() / 2;
 		float y = getYInUserInterfaceDimensionUnit() - getHeightInUserInterfaceDimensionUnit() / 2;
 		float width = getWidthInUserInterfaceDimensionUnit();
 		float height = getHeightInUserInterfaceDimensionUnit();
 		float[] vertices;
-		if (getRotation() == 0) {
+		// TODO think about doing the rotation once and not every time?!
+		// no rotatation now but improvement
+		//if (getRotation() == 0) {
 			vertices = new float[] {
 					x, y,
 					x, y + height,
 					x + width, y + height,
 					x + width, y
 			};
-		} else {
+		/*} else {
 			PointF center = new PointF(x + width / 2f, y + height / 2f);
 			PointF upperLeft = rotatePointAroundPoint(center, new PointF(x, y), getRotation());
 			PointF upperRight = rotatePointAroundPoint(center, new PointF(x, y + height), getRotation());
@@ -533,12 +546,25 @@ public class Look extends Image {
 					lowerRight.x, lowerRight.y,
 					lowerLeft.x, lowerLeft.y
 			};
+		}*/
+
+		// TODO: improved getBoundingRectangle
+		if (pForHitBox == null) {
+			pForHitBox = new Polygon(vertices);
+			boundingRectangle = pForHitBox.getBoundingRectangle();
+		}
+		else {
+			if (!Arrays.equals(pForHitBox.getVertices(), vertices)) {
+				pForHitBox.setVertices(vertices);
+				boundingRectangle = pForHitBox.getBoundingRectangle();
+			}
 		}
 
-		Polygon p = new Polygon(vertices);
-
-		return p.getBoundingRectangle();
+		return boundingRectangle;
 	}
+
+	private Polygon pForHitBox;
+	private Rectangle boundingRectangle;
 
 	public void setMotionDirectionInUserInterfaceDimensionUnit(float degrees) {
 		rotation = (-degrees + DEGREE_UI_OFFSET) % 360;
@@ -642,7 +668,7 @@ public class Look extends Image {
 		refreshTextures(true);
 	}
 
-	private void createShaderIfNotExisting() {
+	public void createShaderIfNotExisting() {
 		if (shader == null) {
 			createBrightnessContrastHueShader();
 		}

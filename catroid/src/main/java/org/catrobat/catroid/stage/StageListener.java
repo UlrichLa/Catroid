@@ -251,6 +251,8 @@ public class StageListener implements ApplicationListener {
 		}
 
 		stage = new Stage(viewPort, batch);
+		// small improvement but not sure about side effects.
+		stage.getRoot().setTransform(false);
 		SensorHandler.timerReferenceValue = SystemClock.uptimeMillis();
 	}
 
@@ -282,7 +284,10 @@ public class StageListener implements ApplicationListener {
 		} else {
 			copy.myOriginal = cloneMe;
 		}
-		copy.look.createBrightnessContrastHueShader();
+		// TODO shader check here ok?!
+		// only create new shader if brightness/hue gets changed on shader?!
+		// anyway if this is possible on a clone?!
+		copy.look.createShaderIfNotExisting();
 		addCloneActorToStage(stage, stage.getRoot(), cloneMe.look, copy.look);
 		sprites.add(copy);
 		if (!copy.getLookList().isEmpty()) {
@@ -336,9 +341,12 @@ public class StageListener implements ApplicationListener {
 		if (!cloneSprite.isClone) {
 			return false;
 		}
-		String cloneNameExtensionRegexPattern = "\\-c\\d+$";
-		String[] splitCloneNameStrings = cloneSprite.getName().split(cloneNameExtensionRegexPattern);
-		return splitCloneNameStrings[0].contentEquals(sprite.getName());
+		//String cloneNameExtensionRegexPattern = "\\-c\\d+$";
+		//String[] splitCloneNameStrings =
+		//		cloneSprite.getName().split(cloneNameExtensionRegexPattern);
+		//return splitCloneNameStrings[0].contentEquals(sprite.getName());
+
+		return sprite.getRawName().equals(sprite.getName());
 	}
 
 	private void disposeClonedSprites() {

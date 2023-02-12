@@ -101,13 +101,13 @@ public class SpriteController {
 	}
 
 	public Sprite copyForCloneBrick(Sprite spriteToCopy) {
-		Sprite sprite = new Sprite(spriteToCopy.getName() + "-c" + StageActivity
-				.getAndIncrementNumberOfClonedSprites());
+		Sprite sprite = new Sprite(spriteToCopy.getName());
 		Project currentProject = ProjectManager.getInstance().getCurrentProject();
 		Scene currentScene = ProjectManager.getInstance().getCurrentlyEditedScene();
 
 		ScriptController scriptController = new ScriptController();
 
+		sprite.cloneName = sprite.getName() + "-c" + StageActivity.getAndIncrementNumberOfClonedSprites();
 		sprite.isClone = true;
 		sprite.setActionFactory(spriteToCopy.getActionFactory());
 
@@ -142,12 +142,13 @@ public class SpriteController {
 			}
 		}
 
-		sprite.resetSprite();
+		// TODO find a better way for pixmap handling
 		int currentLookDataIndex = spriteToCopy.getLookList().indexOf(spriteToCopy.look.getLookData());
 		if (currentLookDataIndex != -1) {
-			sprite.look.setLookData(sprite.getLookList().get(currentLookDataIndex));
+			sprite.look.setLookData(spriteToCopy.getLookList().get(currentLookDataIndex));
 		}
 		spriteToCopy.look.copyTo(sprite.look);
+//		sprite.resetSprite();
 
 		if (spriteToCopy.penConfiguration.isPenDown()) {
 			sprite.penConfiguration.setPenDown(true);

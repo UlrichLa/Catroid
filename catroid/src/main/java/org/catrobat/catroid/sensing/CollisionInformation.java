@@ -29,6 +29,7 @@ import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.util.Log;
 
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.Polygon;
 
 import org.catrobat.catroid.common.Constants;
@@ -37,7 +38,9 @@ import org.catrobat.catroid.utils.ImageEditing;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -118,6 +121,9 @@ public class CollisionInformation {
 		}
 	}
 
+	// TODO: getCollisionPolygonFromPNGMeta map, somewhen map needs to be cleaned
+	private static Map<String, Polygon[]> map =  new HashMap<>();
+
 	public void loadCollisionPolygon() {
 		isCalculationThreadCancelled = false;
 		String path = lookData.getFile().getAbsolutePath();
@@ -128,7 +134,13 @@ public class CollisionInformation {
 			return;
 		}
 
-		collisionPolygons = getCollisionPolygonFromPNGMeta(path);
+		// TODO: getCollisionPolygonFromPNGMeta map, somewhen map needs to be cleaned
+		if (map.containsKey(path))
+			collisionPolygons = map.get(path);
+		else {
+			collisionPolygons = getCollisionPolygonFromPNGMeta(path);
+			map.put(path, collisionPolygons);
+		}
 
 		if (collisionPolygons.length == 0) {
 			createCollisionPolygon(path);
